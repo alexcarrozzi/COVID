@@ -1,0 +1,7 @@
+controller\COVIDCity.class
+controller\COVIDState.class
+controller\DataTransform.class
+services\Prop.class
+controller\DAO.class
+services\Persister.class
+controller\COVIDDate.class
