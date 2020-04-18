@@ -1,10 +1,6 @@
 package controller;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -14,25 +10,17 @@ import services.Persister;
 
 public class DataTransform {
 	private DAO dao;
-	private String startDate = "2020-01-01";
 	private ArrayList<COVIDDate> allDatesData;
 	public final static Logger logger = Logger.getLogger(DataTransform.class);
 
-	public DataTransform(boolean initialLoad) {
-		if (!initialLoad) {
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			Date today = new Date();
-			String td = dateFormat.format(today);
-			LocalDate end = LocalDate.parse(td);
-			startDate = end.minusDays(1).toString();
-		}
-
-		dao = new DAO(startDate);
+	public DataTransform(String sd) {
+		dao = new DAO(sd);
 		this.constructStructure();
+
 		if (this.saveToDB()) {
-			logger.info("Data written successfully for " + startDate);
+			logger.info("Data written successfully for " + sd);
 		} else {
-			logger.error("DB write failed for " + startDate);
+			logger.error("DB write failed for " + sd);
 		}
 	}
 
@@ -215,6 +203,7 @@ public class DataTransform {
 	}
 
 	public static void main(String[] args) {
-		DataTransform dt = new DataTransform(false);
+		String sd = args[0];
+		DataTransform dt = new DataTransform(sd);
 	}
 }
