@@ -1,6 +1,10 @@
 package controller;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -12,8 +16,32 @@ public class DataTransform {
 	private DAO dao;
 	private ArrayList<COVIDDate> allDatesData;
 	public final static Logger logger = Logger.getLogger(DataTransform.class);
+	private Persister per;
 
 	public DataTransform(String sd) {
+		dao = new DAO(sd);
+		this.constructStructure();
+
+		if (this.saveToDB()) {
+			logger.info("Data written successfully for " + sd);
+		} else {
+			logger.error("DB write failed for " + sd);
+		}
+	}
+
+	public DataTransform() throws ParseException {
+		String sd = null, ld = null;
+
+		per = new Persister();
+		ld = per.getLastDate();
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		Date ldDate = sdf.parse(ld);
+		Calendar c = Calendar.getInstance();
+		c.setTime(ldDate);
+		c.add(Calendar.DAY_OF_MONTH, 1);
+		sd = sdf.format(c.getTime());
+
 		dao = new DAO(sd);
 		this.constructStructure();
 
@@ -197,13 +225,22 @@ public class DataTransform {
 	}
 
 	public boolean saveToDB() {
-		Persister per = new Persister();
+		per = new Persister();
 		boolean success = per.saveArrayList(this.allDatesData);
 		return success;
 	}
 
 	public static void main(String[] args) {
-		String sd = args[0];
-		DataTransform dt = new DataTransform(sd);
+		if (args[0].equals("-fresh")) {
+			DataTransform dt = new DataTransform("2020-01-01");
+		} else if (args[0].equals("-update")) {
+			try {
+				DataTransform dt = new DataTransform();
+			} catch (ParseException e) {
+				System.out.println(e.getMessage());
+				logger.error(e.getMessage());
+				e.printStackTrace();
+			}
+		}
 	}
 }
