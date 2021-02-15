@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Configuration
@@ -21,10 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class API extends SpringBootServletInitializer {
 
 	@GetMapping("/totalCases")
-	public List<TotalCases> getTotalCases() {
+	public List<TotalCases> getTotalCases(@RequestParam(required = false) String state) {
 		Service s = new Service();
-		return s.getTotalCases();
-
+		return s.getTotalCases(state);
 	}
 
 	@GetMapping("/totalStateData")
@@ -52,9 +52,9 @@ public class API extends SpringBootServletInitializer {
 	}
 
 	@GetMapping("/stateGrowthOverTime")
-	public List<StateGrowthOverTime> getStateGrowthOverTime() {
+	public List<StateGrowthOverTime> getStateGrowthOverTime(@RequestParam(required = false) String state) {
 		Service s = new Service();
-		return s.getStateGrowthOverTime();
+		return s.getStateGrowthOverTime(state);
 	}
 
 	public static void main(String[] args) {

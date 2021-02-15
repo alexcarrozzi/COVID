@@ -14,7 +14,6 @@ import controller.COVIDDate;
 import controller.COVIDState;
 
 public class Persister {
-	private Process p = null;
 	private Prop prop = null;
 	public final static Logger logger = Logger.getLogger(Persister.class);
 

@@ -10,8 +10,11 @@ public class Service {
 		this.dao = new Dao();
 	}
 
-	public ArrayList<TotalCases> getTotalCases() {
-		return dao.getTotalCases();
+	public ArrayList<TotalCases> getTotalCases(String state) {
+		if (state == "" || state == null) {
+			return dao.getTotalCases();
+		}
+		return dao.getTotalCases(state);
 	}
 
 	public ArrayList<TotalStateData> getTotalStateData() {
@@ -30,7 +33,10 @@ public class Service {
 		return dao.getGrowthByState();
 	}
 
-	public List<StateGrowthOverTime> getStateGrowthOverTime() {
-		return dao.getStateGrowthOverTime();
+	public List<StateGrowthOverTime> getStateGrowthOverTime(String state) {
+		if (state == "" || state == null) {
+			return dao.getStateGrowthOverTime();
+		}
+		return dao.getStateGrowthOverTime(state);
 	}
 }
