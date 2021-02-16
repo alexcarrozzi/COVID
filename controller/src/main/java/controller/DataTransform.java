@@ -1,7 +1,10 @@
 package controller;
 
+import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import services.KDBPersister;
 import services.Persister;
 
 public class DataTransform {
@@ -17,38 +21,67 @@ public class DataTransform {
 	private ArrayList<COVIDDate> allDatesData;
 	public final static Logger logger = Logger.getLogger(DataTransform.class);
 	private Persister per;
+	private KDBPersister perK;
 
-	public DataTransform(String sd) {
-		dao = new DAO(sd);
-		this.constructStructure();
+	public DataTransform(String sd, boolean kdb) {
 
-		if (this.saveToDB()) {
-			logger.info("Data written successfully for " + sd);
-		} else {
-			logger.error("DB write failed for " + sd);
+		boolean SAVE_TO_KDB = kdb;
+		boolean SAVE_TO_MYSQL = !kdb;
+
+		if (SAVE_TO_MYSQL) {
+			dao = new DAO(sd);
+			this.constructStructure();
+
+			if (this.saveToMySql()) {
+				logger.info("Data written successfully for " + sd);
+			} else {
+				logger.error("DB write failed for " + sd);
+			}
+		}
+
+		if (SAVE_TO_KDB) {
+			if (this.saveToKDB()) {
+				logger.info("KDB written successfully for " + sd);
+			} else {
+				logger.error("DB write failed for " + sd);
+			}
 		}
 	}
 
-	public DataTransform() throws ParseException {
+	public DataTransform(boolean kdb) throws ParseException {
 		String sd = null, ld = null;
 
-		per = new Persister();
-		ld = per.getLastDate();
+		boolean SAVE_TO_KDB = kdb;
+		boolean SAVE_TO_MYSQL = !kdb;
 
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		Date ldDate = sdf.parse(ld);
-		Calendar c = Calendar.getInstance();
-		c.setTime(ldDate);
-		c.add(Calendar.DAY_OF_MONTH, 1);
-		sd = sdf.format(c.getTime());
+		if (SAVE_TO_MYSQL) {
+			per = new Persister();
+			ld = per.getLastDate();
 
-		dao = new DAO(sd);
-		this.constructStructure();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date ldDate = sdf.parse(ld);
+			Calendar c = Calendar.getInstance();
+			c.setTime(ldDate);
+			c.add(Calendar.DAY_OF_MONTH, 1);
+			sd = sdf.format(c.getTime());
 
-		if (this.saveToDB()) {
-			logger.info("Data written successfully for " + sd);
-		} else {
-			logger.error("DB write failed for " + sd);
+			dao = new DAO(sd);
+			this.constructStructure();
+
+			if (this.saveToMySql()) {
+
+				logger.info("Data written successfully for " + sd);
+			} else {
+				logger.error("DB write failed for " + sd);
+			}
+		}
+
+		if (SAVE_TO_KDB) {
+			if (this.saveToKDB()) {
+				logger.info("KDB written successfully for " + sd);
+			} else {
+				logger.error("DB write failed for " + sd);
+			}
 		}
 	}
 
@@ -224,23 +257,64 @@ public class DataTransform {
 		}
 	}
 
-	public boolean saveToDB() {
+	public boolean saveToMySql() {
 		per = new Persister();
 		boolean success = per.saveArrayList(this.allDatesData);
 		return success;
 	}
 
+	public boolean saveToKDB() {
+		perK = new KDBPersister();
+		boolean success = false;
+		try {
+			success = perK.insertStateData();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return success;
+	}
+
 	public static void main(String[] args) {
-		if (args[0].equals("-fresh")) {
-			DataTransform dt = new DataTransform("2020-01-01");
-		} else if (args[0].equals("-update")) {
+		System.setProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2");
+		boolean kdb = false;
+		boolean fresh = false;
+		boolean update = false;
+		boolean last = false;
+
+		for (String arg : args) {
+			if (arg.equals("-kdb")) {
+				kdb = true;
+			}
+
+			if (arg.equals("-fresh")) {
+				fresh = true;
+			} else if (arg.equals("-update")) {
+				update = true;
+			} else if (arg.equals("-last")) {
+				last = true;
+			}
+		}
+
+		if (fresh) {
+			DataTransform dt = new DataTransform("2020-01-01", kdb);
+		} else if (update) {
 			try {
-				DataTransform dt = new DataTransform();
+				DataTransform dt = new DataTransform(kdb);
 			} catch (ParseException e) {
 				System.out.println(e.getMessage());
 				logger.error(e.getMessage());
 				e.printStackTrace();
 			}
+		} else if (last) {
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			Date today = new Date();
+			String e = dateFormat.format(today);
+			LocalDate end = LocalDate.parse(e);
+			end = end.minusDays(1);
+
+			DataTransform dt = new DataTransform(end.toString(), kdb);
 		}
 	}
 }

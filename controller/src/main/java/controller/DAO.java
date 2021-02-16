@@ -48,9 +48,9 @@ public class DAO {
 			Response day = this.pullData(curDate);
 			this.sleep(1000);
 			allDates.add(day);
-			System.out.println("Done pulling data for:" + curDate);
+			// System.out.println("Done pulling data for:" + curDate);
 		}
-		System.out.println("DONE");
+		System.out.println("Finished pulling data");
 		return allDates;
 	}
 
@@ -62,6 +62,7 @@ public class DAO {
 				.url("https://covid-19-statistics.p.rapidapi.com/reports?iso=USA&date=" + date).get()
 				.addHeader("x-rapidapi-host", "covid-19-statistics.p.rapidapi.com").addHeader("x-rapidapi-key", apiKey)
 				.addHeader("content-type", "application/json").build();
+		System.out.println(request.toString());
 		try {
 			ret = client.newCall(request).execute();
 		} catch (IOException e) {

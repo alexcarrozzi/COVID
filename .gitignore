@@ -30,7 +30,7 @@ hs_err_pid*
 .recommenders/
 RemoteSystemsTempFiles/
 
-controller/target/classes/
+controller/target/*
 *Servers
 
 *.settings*
