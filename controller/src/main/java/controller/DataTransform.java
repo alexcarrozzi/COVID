@@ -69,7 +69,6 @@ public class DataTransform {
 			this.constructStructure();
 
 			if (this.saveToMySql()) {
-
 				logger.info("Data written successfully for " + sd);
 			} else {
 				logger.error("DB write failed for " + sd);
